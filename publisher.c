@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "mosquitto.h"
+#include <mosquitto.h>
 
 
 // need broker information
@@ -21,8 +21,18 @@ int main(int argc, char const *argv[])
 
 
 	// have a while loop to listen from the broker
+	while(1) {
+		int result = mosquitto_loop(client, -1, 1);
 
+		if (result) {
+			fprintf(stderr, "Error: %s\n", mosquitto_strerror(result));
+			break;
+		}
+	}
 	// testing with a key stroke to send message to esp
 
+	if (kbhit() && getch() == ' ') {
+		mosquitto_publish(client, NULL, "esp32/led", 1, "1", 0, false);
+	}
 	return 0;
 }
