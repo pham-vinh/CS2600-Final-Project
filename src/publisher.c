@@ -1,46 +1,34 @@
+#include "hivemq/client/mqtt_client.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hivemq/client/mqtt_client.h"
 
+#define ADDRESS		"tcp://your-server-hostname-or-ip-address:1883"
+#define CLIENTID	"Publisher"
+#define TOPIC		"led"
+#define PAYLOAD		"on"
+#define QOS			1
+#define TIMEOUT		10000L
 
-#define ADDRESS "tcp://localhost:1883"
-#define CLIENTID "Publisher"
-#define TOPIC "led"
-#define PAYLOAD "on"
-#define QOS 1
-#define TIMEOUT 10000L
-
-const char *broker_host = "test.mosquitto.org";
-const int broker_port = 1883;
-
-struct mosquitto *client;
-
-int main(int argc, char const *argv[])
+int main(int argc, char* argv[])
 {
-	
-	// init Mosquitto client
-	mosquitto_lib_init();
+    mqtt::client* client;
+    mqtt::connect_options conn_opts;
+    mqtt::message pubmsg;
 
-	client = mosquitto_new("publisher", true, NULL);
-	mosquitto_connect(client, broker_host, broker_port, 0);
+    client = new mqtt::client(ADDRESS, CLIENTID);
+    client->connect(conn_opts);
 
-	while(1) {
-		int result = mosquitto_loop(client, -1, 1);
+    if (argc > 1 && strcmp(argv[1], "on") == 0) {
+        pubmsg.set_payload(PAYLOAD);
+        pubmsg.set_qos(QOS);
+        client->publish(TOPIC, pubmsg);
+    }
 
-		if(result) {
-			fprintf(stderr, "Error: %s\n", mosquitto_strerror(result));
-			break;
-		}
-	}
+    printf("Message '%s' with QoS %d sent to topic '%s'.\n", PAYLOAD, QOS, TOPIC);
 
-	if (getchar() == ' ') {
-		mosquitto_publish(client, NULL, "esp/led", 1, "1", 0, false);
-	}
+    client->disconnect();
+    delete client;
 
-
-	mosquitto_disconnect(client);
-	mosquitto_lib_cleanup();
-
-	return 0;
+    return EXIT_SUCCESS;
 }
