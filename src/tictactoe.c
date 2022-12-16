@@ -10,13 +10,12 @@
 int menuInput;
 
 // Long String Matrix
-char board[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0'};
+int board[ROW][COL];
 bool gameOver = false;
 bool computer = false;
 
 // Max Turns == 9
 int maxTurns = 0;
-
 
 // Declare Methods
 void displayMenu();
@@ -34,74 +33,6 @@ bool isGameOver(int player);
 // Helper Methods
 void reset();
 void delay(int number_of_seconds);
-
-// MQTT Broker
-void connect();
-
-int main() {
-    connect();
-
-    displayMenu();
-
-    if (menuInput == 2)
-        computer = true;
-    else if (menuInput == 3) {
-        while (!gameOver) {
-            computerInput(1);
-            isGameOver(1);
-            drawCheck();
-
-            if (!gameOver) {
-                delay(2);
-                computerInput(2);
-                isGameOver(2);
-                drawCheck();
-            }
-
-            delay(2);
-        }
-    }
-
-    while (!gameOver) {
-        getPlayerTurn(1);
-        isGameOver(1);
-        drawCheck();
-        if (computer && !gameOver) {
-            computerInput(2);
-            isGameOver(2);
-            drawCheck();
-        } else if (!gameOver) {
-            getPlayerTurn(2);
-            isGameOver(2);
-            drawCheck();
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
-
-void connect() {
-    int rc;
-    struct mosquitto* mosq;
-
-    mosquitto_lib_init();
-
-    mosq = mosquitto_new("LaptopClient", true, NULL);
-
-    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
-
-    if (rc != 0) {
-        printf("Client could not connect to broker! Error Code: %d\n", rc);
-        mosquitto_destroy(mosq);
-        exit(EXIT_SUCCESS);
-    }
-    printf("We are now connected to the broker!\n");
-
-    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
-
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
 
 void on_connect(struct mosquitto* mosq, void* obj, int rc) {
     printf("ID: %d\n", *(int*)obj);
@@ -156,71 +87,33 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
             break;
     }
 }
-
-int connect() {
-    int rc, id = 1;
-	
-    mosquitto_lib_init();
-
+void connect() {
+    int rc;
     struct mosquitto* mosq;
 
+    mosquitto_lib_init();
 
-    mosq = mosquitto_new("LaptopClient", true, &id);
-
-    mosquitto_connect_callback_set(mosq, on_connect);
-    mosquitto_message_callback_set(mosq, on_message);
+    mosq = mosquitto_new("LaptopClient", true, NULL);
 
     rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
-	
-    if (rc) {
+
+    if (rc != 0) {
         printf("Client could not connect to broker! Error Code: %d\n", rc);
-		return -1;
+        mosquitto_destroy(mosq);
+        return EXIT_SUCCESS;
     }
     printf("We are now connected to the broker!\n");
 
-	mosquitto_loop_start(mosq);
-    printf("Press Enter to quit...\n");
-    getchar();
-    mosquitto_loop_stop(mosq, true);
+    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
 
     mosquitto_disconnect(mosq);
     mosquitto_destroy(mosq);
 
     mosquitto_lib_cleanup();
-	return EXIT_SUCCESS;
 }
 
-
 int main() {
-        int rc, id=12;
-
-    mosquitto_lib_init();
-
-    struct mosquitto *mosq;
-
-    mosq = mosquitto_new("subscribe-test", true, &id);
-
-    mosquitto_connect_callback_set(mosq, on_connect);
-    mosquitto_message_callback_set(mosq, on_message);
-
-    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
-
-    if (rc) {
-        printf("Could not connect to Broker with return code %d\n", rc);
-        return -1;
-    }
-
-    mosquitto_loop_start(mosq);
-    printf("Press Enter to quit...\n");
-    getchar();
-    mosquitto_loop_stop(mosq, true);
-
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
-
-    return EXIT_SUCCESS;
+    connect();
 
     displayMenu();
 
@@ -260,10 +153,6 @@ int main() {
 
     return EXIT_SUCCESS;
 }
-
-
-
-
 
 void gameRestart() {
     int input = 0;
