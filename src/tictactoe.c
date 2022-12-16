@@ -50,7 +50,7 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
 void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
     printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
 
-    char *payload = (char*)message->payload;
+    char *payload = (char*)msg->payload;
     int keypad_data = atoi(payload);
 
     switch (keypad_data) {
