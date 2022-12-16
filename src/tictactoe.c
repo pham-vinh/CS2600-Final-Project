@@ -34,8 +34,8 @@ bool isGameOver(int player);
 void reset();
 void delay(int number_of_seconds);
 
-void on_connect(struct mosquitto* mosq, void* obj, int rc) {
-    printf("ID: %d\n", *(int*)obj);
+void on_connect(struct mosquitto *mosq, void *obj, int rc) {
+    printf("ID: %d\n", *(int *)obj);
 
     if (rc) {
         printf("Error with result code: %d\n", rc);
@@ -48,7 +48,7 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
 }
 
 void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
-	char *payload = (char*)msg->payload;
+    char *payload = (char *)msg->payload;
     int keypad_data = atoi(payload);
 
     switch (keypad_data) {
@@ -123,36 +123,30 @@ int main() {
         }
     }
 
-	while (!gameOver) {
-		getPlayerTurn(1);
-		isGameOver(1);
-		drawCheck();
-		if (computer && !gameOver) {
-			computerInput(2);
-			isGameOver(2);
-			drawCheck();
-		} else if (!gameOver) {
-			printf("Player 2: make your move\n");
-			bool waiting = true;
+    while (!gameOver) {
+        getPlayerTurn(1);
+        isGameOver(1);
+        drawCheck();
+        if (computer && !gameOver) {
+            computerInput(2);
+            isGameOver(2);
+            drawCheck();
+        } else if (!gameOver) {
+            printf("Player 2: make your move\n");
+            bool waiting = true;
 
-			while (waiting) {
+            while (mosq) {
+                mosquitto_loop(mosq, -1, 1);
+            }
+            isGameOver(2);
+            drawCheck();
+        }
+    }
 
-					if(mosq) {
-						waiting = false;
-					}
-			}
-			mosquitto_loop(mosq, -1, 1);
-			isGameOver(2);
-			drawCheck();
-		}
-	}
-	
-	mosquitto_lib_cleanup();
+    mosquitto_lib_cleanup();
 
     return EXIT_SUCCESS;
 }
-
-
 
 void gameRestart() {
     int input = 0;
