@@ -6,11 +6,7 @@
 #define ROW 3
 #define COL 3
 
-// boolean of either pvp or pvc
 int menuInput;
-
-// Swapping between player 1 and 2
-int playerTurn = 1;
 
 // Long String Matrix
 int board[ROW][COL];
@@ -23,12 +19,11 @@ int maxTurns = 0;
 // Declare Methods
 void displayMenu();
 void printBoard();
-void winMessage();
 
-void getPlayerTurn();
-void computerInput();
-int drawCheck();
-int isValid();
+void getPlayerTurn(int pT);
+void computerInput(int player);
+void drawCheck();
+int isValid(int x, int y);
 bool isGameOver(int player);
 void reset();
 void delay(int number_of_seconds);
@@ -36,9 +31,6 @@ void delay(int number_of_seconds);
 int main()
 {
 
-    int player; // 0 is false, 1 is true
-    int game = 1; // Play Again
-                  // get input on menu
     displayMenu();
 
     if (menuInput == 2)
@@ -62,9 +54,7 @@ int main()
     }
 
     while (!gameOver) {
-
         getPlayerTurn(1);
-        printBoard();
         isGameOver(1);
         drawCheck();
         if (computer && !gameOver) {
@@ -73,7 +63,6 @@ int main()
             drawCheck();
         } else if (!gameOver) {
             getPlayerTurn(2);
-            printBoard();
             isGameOver(2);
             drawCheck();
         }
@@ -105,17 +94,14 @@ void delay(int number_of_seconds)
         ;
 }
 
-int drawCheck()
+void drawCheck()
 {
     if (maxTurns >= 9) {
         printf("Draw!\n");
-        return 1;
+        gameOver = true;
     }
-    return 0;
 }
 
-// Bug: didn't get the right input
-// method for displaying menu
 void displayMenu()
 {
     printf("\n======================\n");
@@ -167,40 +153,29 @@ bool isGameOver(int player)
             printf("Game over! Result: Computer wins!\n");
             printBoard();
         } else {
-            winMessage(player);
+            printf("Player %d Wins!\n", player);
             printBoard();
         }
     }
     return gameOver;
 }
 
-void winMessage(int player) { printf("Player %d Wins!\n", player); }
-
-// Bug: giving the wrong coordinates and removed swap player turns in this method because it was messing up with the
-// order get coords and swap
 void getPlayerTurn(int pT)
 {
-    int x = 0;
-    int y = 0;
-    if (pT == 1) {
-        printf("Player 1: make your move\n");
-        scanf("%d %d", &x, &y);
-        if (isValid(x, y) == 1) {
-            x -= 1;
-            y -= 1;
-            maxTurns++;
-        } else
-            getPlayerTurn(1);
-    } else {
-        printf("Player 2: make your move\n");
-        scanf("%d %d", &x, &y);
-        if (isValid(x, y) == 1) {
-            x -= 1;
-            y -= 1;
-            maxTurns++;
-        } else
-            getPlayerTurn(2);
-    }
+    printBoard();
+
+    int row = 0;
+    int col = 0;
+
+    printf("Player %d: make your move\n", pT);
+    scanf("%d %d", &row, &col);
+    if (isValid(row, col) == 1) {
+        row -= 1;
+        col -= 1;
+        board[row][col] = pT;
+        maxTurns++;
+    } else
+        getPlayerTurn(pT);
 }
 
 void printBoard()
