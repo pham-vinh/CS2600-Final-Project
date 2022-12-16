@@ -74,7 +74,7 @@ void loop() {
   delay(5000);
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char* topic, byte* payload, unsigned int length) {  
   Serial.print("Message arrived in topic: ");
   Serial.println(topic);
   Serial.print("Message:");

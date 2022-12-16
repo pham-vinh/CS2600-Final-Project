@@ -87,7 +87,7 @@ void connect() {
 
     mosq = mosquitto_new("LaptopClient", true, NULL);
 
-    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 60);
+    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
 
     if (rc != 0) {
         printf("Client could not connect to broker! Error Code: %d\n", rc);
@@ -113,6 +113,8 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
     }
 
     mosquitto_subscribe(mosq, NULL, "ESP32/input", 0);
+
+	// change environmental variable for script
 }
 
 void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
