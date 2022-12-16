@@ -88,13 +88,12 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
     }
 }
 
-
 int main() {
-        int rc, id=12;
+    int rc, id = 12;
 
     mosquitto_lib_init();
 
-    struct mosquitto *mosq;
+    struct mosquitto* mosq;
 
     mosq = mosquitto_new("subscribe-test", true, &id);
 
@@ -108,18 +107,13 @@ int main() {
         return -1;
     }
 
-    mosquitto_loop_start(mosq);
-    printf("Press Enter to quit...\n");
-    getchar();
-
-
-
     displayMenu();
 
     if (menuInput == 2)
         computer = true;
     else if (menuInput == 3) {
         while (!gameOver) {
+            delay(2);
             computerInput(1);
             isGameOver(1);
             drawCheck();
@@ -130,12 +124,12 @@ int main() {
                 isGameOver(2);
                 drawCheck();
             }
-
-            delay(2);
         }
     }
 
     while (!gameOver) {
+        mosquitto_loop_start(mosq);
+
         getPlayerTurn(1);
         isGameOver(1);
         drawCheck();
@@ -148,15 +142,14 @@ int main() {
             isGameOver(2);
             drawCheck();
         }
+        mosquitto_loop_stop(mosq, true);
+
+        mosquitto_disconnect(mosq);
+        mosquitto_destroy(mosq);
+
+        mosquitto_lib_cleanup();
     }
 
-    mosquitto_loop_stop(mosq, true);
-
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
-	
     return EXIT_SUCCESS;
 }
 
