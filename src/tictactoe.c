@@ -13,6 +13,7 @@ int menuInput;
 int board[ROW][COL];
 bool gameOver = false;
 bool computer = false;
+bool playerMoved = false;
 
 // Max Turns == 9
 int maxTurns = 0;
@@ -119,7 +120,7 @@ int main() {
     }
 
 
-	bool playerMoved = false;
+
     displayMenu();
 
     if (menuInput == 2)
