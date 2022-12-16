@@ -2,11 +2,11 @@
 #include <PubSubClient.h>
 
 // WiFi credentials
-const char* ssid = "eduroam";
-const char* password = "your_wifi_password";
+const char* ssid = "viPhone";
+const char* password = "12345678";
 
 // Mosquitto MQTT broker information
-const char* broker_host = "your_broker_hostname";
+const char* broker_host = "test.mosquitto.org";
 const int broker_port = 1883;
 
 // Create a WiFiClient object
@@ -35,10 +35,10 @@ void loop() {
   // Connect to the Mosquitto MQTT broker
   if (client.connect("ESP32Client")) {
     // Subscribe to a topic
-    client.subscribe("esp32/topic");
+    client.subscribe("ESP32/input");
 
     // Publish a message to a topic
-    client.publish("esp32/topic", "Hello from ESP32!");
+    client.publish("ESP32/output", "Hello from ESP32!");
   }
 
   // Disconnect from the broker
