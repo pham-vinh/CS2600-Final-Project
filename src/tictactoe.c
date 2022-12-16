@@ -30,7 +30,7 @@ void computerInput();
 void setGameState();
 int drawCheck();
 int isValid();
-int isGameOver();
+bool isGameOver(int player);
 
 int main()
 {
@@ -45,11 +45,11 @@ int main()
     else if (gameType == 3) {
         while (!gameOver) {
             computerTurn(1);
-            checkWin(1);
+            isGameOver(1);
             checkTie();
             if (!gameOver) {
                 computerTurn(2);
-                checkWin(2);
+                isGameOver(2);
                 checkTie();
             }
         }
@@ -121,7 +121,7 @@ void displayMenu()
     }
 }
 
-int isGameOver()
+bool isGameOver(int player)
 {
 
     // check vertical
@@ -130,14 +130,13 @@ int isGameOver()
             gameOver = true;
         }
     }
-	
+
     // check horizontal
     for (int i = 0; i < 3; i++) {
         if (grid[i][0] == player && grid[i][1] == player && grid[i][2] == player) {
             gameOver = true;
         }
     }
-
 
     // check diagonal win (top left to bottom right)
     if (grid[0][0] == player && grid[1][1] == player && grid[2][2] == player) {
@@ -212,7 +211,6 @@ void setGameState(int x, int y, int player)
     }
 }
 
-// Bug: did not print out the correct table/ coordinate issue
 void printBoard()
 {
     for (int i = 0; i < 3; i++) {
@@ -232,20 +230,22 @@ void printBoard()
     printf("+-----------+\n");
 }
 
-// Bug: Didn't account for the computer's turn which caused checkDraw() to not work
-void computerInput()
+void computerInput(int player)
 {
-    time_t t;
-    srand((unsigned)time(&t));
-    x = rand() % 3;
-    y = rand() % 3;
+    displayBoard();
+    bool isValid = false;
 
-    while (board[x][y] != 0) {
-        x = rand() % 3;
-        y = rand() % 3;
+    while (!isValid) {
+        int row = (rand() % (3));
+        int column = (rand() % (3));
+
+        if (grid[row][column] == 0) {
+            grid[row][column] = player;
+            printf("Computer: makes their move\n%d %d\n", row, column);
+            isValid = true;
+        }
     }
     maxTurns++;
-    printf("Computer: makes their move\n%d %d\n", x + 1, y + 1);
 }
 
 // Change: Decided to substract 1 from the coords to fix the issue with misalignment
