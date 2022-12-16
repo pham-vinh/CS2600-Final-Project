@@ -10,7 +10,7 @@
 int menuInput;
 
 // Long String Matrix
-int board[ROW][COL];
+char board[] = {'0', '0', '0', '0', '0', '0', '0', '0', '0'};
 bool gameOver = false;
 bool computer = false;
 
@@ -35,6 +35,72 @@ bool isGameOver(int player);
 void reset();
 void delay(int number_of_seconds);
 
+// MQTT Broker
+void connect();
+
+int main() {
+    connect();
+
+    displayMenu();
+
+    if (menuInput == 2)
+        computer = true;
+    else if (menuInput == 3) {
+        while (!gameOver) {
+            computerInput(1);
+            isGameOver(1);
+            drawCheck();
+
+            if (!gameOver) {
+                delay(2);
+                computerInput(2);
+                isGameOver(2);
+                drawCheck();
+            }
+
+            delay(2);
+        }
+    }
+
+    while (!gameOver) {
+        getPlayerTurn(1);
+        isGameOver(1);
+        drawCheck();
+        if (computer && !gameOver) {
+            computerInput(2);
+            isGameOver(2);
+            drawCheck();
+        } else if (!gameOver) {
+            getPlayerTurn(2);
+            isGameOver(2);
+            drawCheck();
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+
+void connect() {
+    int rc;
+    struct mosquitto* mosq;
+
+    mosquitto_lib_init();
+
+    mosq = mosquitto_new("LaptopClient", true, NULL);
+
+    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
+
+    if (rc != 0) {
+        printf("Client could not connect to broker! Error Code: %d\n", rc);
+        mosquitto_destroy(mosq);
+        exit(EXIT_SUCCESS);
+    }
+    printf("We are now connected to the broker!\n");
+
+    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
+
+    mosquitto_disconnect(mosq);
+    mosquitto_destroy(mosq);
 
 
 void on_connect(struct mosquitto* mosq, void* obj, int rc) {
@@ -47,13 +113,13 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
 
     mosquitto_subscribe(mosq, NULL, "ESP32/input", 0);
 
-	// change environmental variable for script
+    // change environmental variable for script
 }
 
 void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
     printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
 
-	char payload = *((char*) msg->payload);
+    char payload = *((char*)msg->payload);
 
     switch (payload) {
         case '1':
@@ -84,7 +150,7 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
             board[2][2] = 2;
             break;
         case '*':
-			reset();
+            reset();
             break;
         default:
             break;

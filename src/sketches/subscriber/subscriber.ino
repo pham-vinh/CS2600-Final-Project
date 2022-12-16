@@ -58,15 +58,19 @@ void loop() {
     // Subscribe to a topic
     client.subscribe("ESP32/input");
 
-    int cols = 0x01;                                     // Assign binary 00000001. Means the first column is selected.
-    for (int j = 0; j < 8; j++) {                        // display image of each frame
-      matrixRowsVal(pgm_read_word_near(tictactoe + j));  // display the data in this column
-      matrixColsVal(~cols);                              // select this column
-      cols <<= 1;                                        // shift"cols" 1 bit left to select the next column
-    }
+    // int cols = 0x01;                                     // Assign binary 00000001. Means the first column is selected.
+    // for (int j = 0; j < 8; j++) {                        // display image of each frame
+    //   matrixRowsVal(pgm_read_word_near(tictactoe + j));  // display the data in this column
+    //   matrixColsVal(~cols);                              // select this column
+    //   cols <<= 1;                                        // shift"cols" 1 bit left to select the next column
+    // }
 
-    // Publish a message to a topic
-    client.publish("ESP32/input", "Hello from ESP32!");
+    char keyPressed = myKeypad.getKey();
+    const char *ptr = &keyPressed;
+    if (keyPressed) {
+      Serial.println(keyPressed);
+      client.publish("ESP32/input", ptr);
+    }
   }
 
   // Disconnect from the broker
@@ -74,7 +78,7 @@ void loop() {
   delay(5000);
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {  
+void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived in topic: ");
   Serial.println(topic);
   Serial.print("Message:");
