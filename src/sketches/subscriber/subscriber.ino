@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <Keypad.h>
 
 int latchPin = 2;
 int clockPin = 4;
