@@ -55,30 +55,41 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
     switch (payload) {
         case '1':
             board[0][0] = 2;
+			playerMoved = true;
             break;
         case '2':
             board[0][1] = 2;
+			playerMoved = true;
             break;
         case '3':
             board[0][2] = 2;
+			playerMoved = true;
             break;
         case '4':
             board[1][0] = 2;
+			playerMoved = true;
+
             break;
         case '5':
             board[1][1] = 2;
+			playerMoved = true;
+
             break;
         case '6':
             board[1][2] = 2;
+			playerMoved = true;
             break;
         case '7':
             board[2][0] = 2;
+			playerMoved = true;
             break;
         case '8':
             board[2][1] = 2;
+			playerMoved = true;
             break;
         case '9':
             board[2][2] = 2;
+			playerMoved = true;
             break;
         case '*':
             reset();
@@ -107,6 +118,8 @@ int main() {
         return -1;
     }
 
+
+	bool playerMoved = false;
     displayMenu();
 
     if (menuInput == 2)
@@ -137,12 +150,13 @@ int main() {
             drawCheck();
         } else if (!gameOver) {
             mosquitto_loop_start(mosq);
+
+            if (playerMoved) {
+                mosquitto_disconnect(mosq);
+                mosquitto_destroy(mosq);
+                mosquitto_lib_cleanup();
+            }
             mosquitto_loop_stop(mosq, true);
-
-            mosquitto_disconnect(mosq);
-            mosquitto_destroy(mosq);
-
-            mosquitto_lib_cleanup();
 
             isGameOver(2);
             drawCheck();
