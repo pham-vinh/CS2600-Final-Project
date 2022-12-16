@@ -47,9 +47,7 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
     // change environmental variable for script
 }
 
-void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
-    printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
-
+void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
     char *payload = (char*)msg->payload;
     int keypad_data = atoi(payload);
 
