@@ -56,41 +56,41 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
     switch (payload) {
         case '1':
             board[0][0] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '2':
             board[0][1] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '3':
             board[0][2] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '4':
             board[1][0] = 2;
-			playerMoved = true;
+            playerMoved = true;
 
             break;
         case '5':
             board[1][1] = 2;
-			playerMoved = true;
+            playerMoved = true;
 
             break;
         case '6':
             board[1][2] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '7':
             board[2][0] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '8':
             board[2][1] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '9':
             board[2][2] = 2;
-			playerMoved = true;
+            playerMoved = true;
             break;
         case '*':
             reset();
@@ -105,12 +105,9 @@ int main() {
 
     mosquitto_lib_init();
 
-    struct mosquitto* mosq;
-
-    mosq = mosquitto_new("subscribe-test", true, &id);
+    struct mosquitto* mosq = mosquitto_new("subscribe-test", true, &id);
 
     mosquitto_connect_callback_set(mosq, on_connect);
-    mosquitto_message_callback_set(mosq, on_message);
 
     rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
 
@@ -118,8 +115,6 @@ int main() {
         printf("Could not connect to Broker with return code %d\n", rc);
         return -1;
     }
-
-
 
     displayMenu();
 
@@ -150,14 +145,13 @@ int main() {
             isGameOver(2);
             drawCheck();
         } else if (!gameOver) {
-            mosquitto_loop_start(mosq);
-
-            if (playerMoved) {
-                mosquitto_disconnect(mosq);
-                mosquitto_destroy(mosq);
-                mosquitto_lib_cleanup();
+            if (mosq) {
+                mosquitto_message_callback_set(mosq, my_callback);
+                mosquitto_loop_forever(mosq, -1, 1);
             }
-            mosquitto_loop_stop(mosq, true);
+            mosquitto_disconnect(mosq);
+            mosquitto_destroy(mosq);
+            mosquitto_lib_cleanup();
 
             isGameOver(2);
             drawCheck();
