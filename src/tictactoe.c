@@ -128,8 +128,6 @@ int main() {
     }
 
     while (!gameOver) {
-        mosquitto_loop_start(mosq);
-
         getPlayerTurn(1);
         isGameOver(1);
         drawCheck();
@@ -138,16 +136,17 @@ int main() {
             isGameOver(2);
             drawCheck();
         } else if (!gameOver) {
-            getPlayerTurn(2);
+            mosquitto_loop_start(mosq);
+            mosquitto_loop_stop(mosq, true);
+
+            mosquitto_disconnect(mosq);
+            mosquitto_destroy(mosq);
+
+            mosquitto_lib_cleanup();
+
             isGameOver(2);
             drawCheck();
         }
-        mosquitto_loop_stop(mosq, true);
-
-        mosquitto_disconnect(mosq);
-        mosquitto_destroy(mosq);
-
-        mosquitto_lib_cleanup();
     }
 
     return EXIT_SUCCESS;
