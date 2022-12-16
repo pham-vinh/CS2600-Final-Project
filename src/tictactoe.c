@@ -13,7 +13,6 @@ int menuInput;
 int board[ROW][COL];
 bool gameOver = false;
 bool computer = false;
-bool playerMoved = false;
 
 // Max Turns == 9
 int maxTurns = 0;
@@ -51,46 +50,36 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
 void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
     printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
 
-    char payload = *((char*)msg->payload);
+    char *payload = (char*)message->payload;
+    int keypad_data = atoi(payload);
 
-    switch (payload) {
+    switch (keypad_data) {
         case '1':
             board[0][0] = 2;
-            playerMoved = true;
             break;
         case '2':
             board[0][1] = 2;
-            playerMoved = true;
             break;
         case '3':
             board[0][2] = 2;
-            playerMoved = true;
             break;
         case '4':
             board[1][0] = 2;
-            playerMoved = true;
-
             break;
         case '5':
             board[1][1] = 2;
-            playerMoved = true;
-
             break;
         case '6':
             board[1][2] = 2;
-            playerMoved = true;
             break;
         case '7':
             board[2][0] = 2;
-            playerMoved = true;
             break;
         case '8':
             board[2][1] = 2;
-            playerMoved = true;
             break;
         case '9':
             board[2][2] = 2;
-            playerMoved = true;
             break;
         case '*':
             reset();
@@ -101,11 +90,11 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
 }
 
 int main() {
-    int rc, id = 12;
+    int rc;
 
     mosquitto_lib_init();
 
-    struct mosquitto* mosq = mosquitto_new("subscribe-test", true, &id);
+    struct mosquitto *mosq = mosquitto_new("subscribe-test", true, NULL);
 
     mosquitto_connect_callback_set(mosq, on_connect);
 
@@ -149,8 +138,6 @@ int main() {
                 mosquitto_message_callback_set(mosq, my_callback);
                 mosquitto_loop_forever(mosq, -1, 1);
             }
-            mosquitto_disconnect(mosq);
-            mosquitto_destroy(mosq);
             mosquitto_lib_cleanup();
 
             isGameOver(2);
