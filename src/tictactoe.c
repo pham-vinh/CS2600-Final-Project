@@ -27,10 +27,11 @@ void winMessage();
 
 void getPlayerTurn();
 void computerInput();
-void setGameState();
 int drawCheck();
 int isValid();
 bool isGameOver(int player);
+void reset();
+void delay(int number_of_seconds);
 
 int main()
 {
@@ -42,53 +43,66 @@ int main()
 
     if (menuInput == 2)
         computer = true;
-    else if (gameType == 3) {
+    else if (menuInput == 3) {
+
         while (!gameOver) {
-            computerTurn(1);
+            computerInput(1);
             isGameOver(1);
-            checkTie();
+            drawCheck();
+
             if (!gameOver) {
-                computerTurn(2);
+                delay(2);
+                computerInput(2);
                 isGameOver(2);
-                checkTie();
+                drawCheck();
             }
+
+            delay(2);
         }
     }
 
-    while (game == 1) {
+    while (!gameOver) {
 
-        // print out the first game state via method in a while loop while getting input
-        setGameState(0, 0, 0);
+        getPlayerTurn(1);
         printBoard();
-
-        while (isGameOver() == 0) {
-
-            if (player == 1) {
-                getPlayerTurn(playerTurn);
-                setGameState(x, y, playerTurn);
-                if (playerTurn == 1)
-                    playerTurn = 2;
-                else
-                    playerTurn = 1;
-            } else {
-                getPlayerTurn(1);
-                setGameState(x, y, 1);
-
-                if (drawCheck() == 0) {
-                    computerInput(); // sets x and y randomly
-                    setGameState(x, y, 2);
-                }
-            }
+        isGameOver(1);
+        drawCheck();
+        if (computer && !gameOver) {
+            computerInput(2);
+            isGameOver(2);
+            drawCheck();
+        } else if (!gameOver) {
+            getPlayerTurn(2);
             printBoard();
+            isGameOver(2);
+            drawCheck();
         }
-
-        printf("\nPlay Again?\n1: Yes\n2: No\n");
-        scanf("%d", &game);
-
-        if (game == 2)
-            exit(0);
     }
+
     return 0;
+}
+
+void gameRestart()
+{
+    int input = 0;
+    printf("\nPlay Again?\n1: Yes\n2: No\n");
+    scanf("%d", &input);
+
+    if (input == 1)
+        reset();
+    else if (input == 2)
+        exit(0);
+    else
+        gameRestart();
+}
+
+void delay(int number_of_seconds)
+{
+    int milli_seconds = 1000 * number_of_seconds;
+
+    clock_t start_time = clock();
+    while (clock() < start_time + milli_seconds)
+        ;
 }
 
 int drawCheck()
@@ -125,54 +139,49 @@ bool isGameOver(int player)
 {
 
     // check vertical
-    for (int i = 0; i < 3; i++) {
-        if (grid[0][i] == player && grid[1][i] == player && grid[2][i] == player) {
+    for (int i = 0; i < COL; i++) {
+        if (board[0][i] == player && board[1][i] == player && board[2][i] == player) {
             gameOver = true;
         }
     }
 
     // check horizontal
-    for (int i = 0; i < 3; i++) {
-        if (grid[i][0] == player && grid[i][1] == player && grid[i][2] == player) {
+    for (int i = 0; i < ROW; i++) {
+        if (board[i][0] == player && board[i][1] == player && board[i][2] == player) {
             gameOver = true;
         }
     }
 
     // check diagonal win (top left to bottom right)
-    if (grid[0][0] == player && grid[1][1] == player && grid[2][2] == player) {
+    if (board[0][0] == player && board[1][1] == player && board[2][2] == player) {
         gameOver = true;
     }
 
     // check diagonal win (bottom left to top right)
-    if (grid[2][0] == player && grid[1][1] == player && grid[0][2] == player) {
+    if (board[2][0] == player && board[1][1] == player && board[0][2] == player) {
         gameOver = true;
     }
 
     if (gameOver) {
-        if (vsComputer && player == 2) {
+        if (computer && player == 2) {
             printf("Game over! Result: Computer wins!\n");
-            displayBoard();
+            printBoard();
         } else {
-            printf("Game over! Result: Player %d wins!\n", player);
-            displayBoard();
+            winMessage(player);
+            printBoard();
         }
     }
     return gameOver;
 }
 
-void winMessage(int player)
-{
-    if (player == 1) {
-        printf("Player 1 Wins!\n");
-    } else {
-        printf("Player 2 Wins!\n");
-    }
-}
+void winMessage(int player) { printf("Player %d Wins!\n", player); }
 
 // Bug: giving the wrong coordinates and removed swap player turns in this method because it was messing up with the
 // order get coords and swap
 void getPlayerTurn(int pT)
 {
+    int x = 0;
+    int y = 0;
     if (pT == 1) {
         printf("Player 1: make your move\n");
         scanf("%d %d", &x, &y);
@@ -191,23 +200,6 @@ void getPlayerTurn(int pT)
             maxTurns++;
         } else
             getPlayerTurn(2);
-    }
-}
-
-// Bug:wasn't resetting the board so I added an else to reset the board
-void setGameState(int x, int y, int player)
-{
-    if (player == 1) {
-        board[x][y] = 1;
-    } else if (player == 2) {
-        board[x][y] = 2;
-    } else {
-        // Resetting
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                board[i][j] = 0;
-            }
-        }
     }
 }
 
@@ -230,17 +222,26 @@ void printBoard()
     printf("+-----------+\n");
 }
 
+void reset()
+{
+    for (int i = 0; i < ROW; i++) {
+        for (int j = 0; j < COL; j++) {
+            board[i][j] = 0;
+        }
+    }
+}
+
 void computerInput(int player)
 {
-    displayBoard();
+    printBoard();
     bool isValid = false;
 
     while (!isValid) {
-        int row = (rand() % (3));
-        int column = (rand() % (3));
+        int row = (rand() % (3)) + 1;
+        int column = (rand() % (3)) + 1;
 
-        if (grid[row][column] == 0) {
-            grid[row][column] = player;
+        if (board[row - 1][column - 1] == 0) {
+            board[row - 1][column - 1] = player;
             printf("Computer: makes their move\n%d %d\n", row, column);
             isValid = true;
         }
@@ -248,7 +249,6 @@ void computerInput(int player)
     maxTurns++;
 }
 
-// Change: Decided to substract 1 from the coords to fix the issue with misalignment
 int isValid(int x, int y)
 {
     if ((x < 4 && x > 0) && (y < 4 && y > 0)) {
