@@ -146,7 +146,7 @@ int main() {
             drawCheck();
         } else if (!gameOver) {
             if (mosq) {
-                mosquitto_message_callback_set(mosq, my_callback);
+                mosquitto_message_callback_set(mosq, on_message);
                 mosquitto_loop_forever(mosq, -1, 1);
             }
             mosquitto_disconnect(mosq);
