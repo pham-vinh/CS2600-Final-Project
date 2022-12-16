@@ -111,12 +111,7 @@ int main() {
     mosquitto_loop_start(mosq);
     printf("Press Enter to quit...\n");
     getchar();
-    mosquitto_loop_stop(mosq, true);
 
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
 
 
     displayMenu();
@@ -155,6 +150,13 @@ int main() {
         }
     }
 
+    mosquitto_loop_stop(mosq, true);
+
+    mosquitto_disconnect(mosq);
+    mosquitto_destroy(mosq);
+
+    mosquitto_lib_cleanup();
+	
     return EXIT_SUCCESS;
 }
 
