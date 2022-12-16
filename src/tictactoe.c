@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <mosquitto.h>
+
 #define ROW 3
 #define COL 3
 
@@ -20,16 +22,25 @@ int maxTurns = 0;
 void displayMenu();
 void printBoard();
 
+// Input
 void getPlayerTurn(int pT);
 void computerInput(int player);
+
+// Game State
 void drawCheck();
 int isValid(int x, int y);
 bool isGameOver(int player);
+
+// Helper Methods
 void reset();
 void delay(int number_of_seconds);
 
+// MQTT Broker
+void connect();
+
 int main()
 {
+    connect();
 
     displayMenu();
 
@@ -68,7 +79,33 @@ int main()
         }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
+}
+
+void connect()
+{
+    int rc;
+    struct mosquitto* mosq;
+
+    mosquitto_lib_init();
+
+    mosq = mosquitto_new("player1", true, NULL);
+
+    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 60);
+
+    if (rc != 0) {
+        printf("Client could not connect to broker! Error Code: %d\n", rc);
+        mosquitto_destroy(mosq);
+        return EXIT_FAILURE;
+    }
+    printf("We are now connected to the broker!\n");
+
+    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
+
+    mosquitto_disconnect(mosq);
+    mosquitto_destroy(mosq);
+
+    mosquitto_lib_cleanup();
 }
 
 void gameRestart()
