@@ -88,54 +88,36 @@ void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_messag
     }
 }
 
-int connect() {
-    int rc;
-    struct mosquitto* mosq;
-
-    mosquitto_lib_init();
-
-    mosq = mosquitto_new("LaptopClient", true, NULL);
-
-    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
-
-    if (rc != 0) {
-        printf("Client could not connect to broker! Error Code: %d\n", rc);
-        mosquitto_destroy(mosq);
-        return EXIT_SUCCESS;
-    }
-    printf("We are now connected to the broker!\n");
-
-    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
-
-    mosquitto_disconnect(mosq);
-    mosquitto_destroy(mosq);
-
-    mosquitto_lib_cleanup();
-}
 
 int main() {
-    int rc;
-    struct mosquitto* mosq;
+        int rc, id=12;
 
     mosquitto_lib_init();
 
-    mosq = mosquitto_new("LaptopClient", true, NULL);
+    struct mosquitto *mosq;
+
+    mosq = mosquitto_new("subscribe-test", true, &id);
+
+    mosquitto_connect_callback_set(mosq, on_connect);
+    mosquitto_message_callback_set(mosq, on_message);
 
     rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
 
-    if (rc != 0) {
-        printf("Client could not connect to broker! Error Code: %d\n", rc);
-        mosquitto_destroy(mosq);
-        return EXIT_SUCCESS;
+    if (rc) {
+        printf("Could not connect to Broker with return code %d\n", rc);
+        return -1;
     }
-    printf("We are now connected to the broker!\n");
 
-    mosquitto_publish(mosq, NULL, "ESP32/input", 6, "Hello", 0, false);
+    mosquitto_loop_start(mosq);
+    printf("Press Enter to quit...\n");
+    getchar();
+    mosquitto_loop_stop(mosq, true);
 
     mosquitto_disconnect(mosq);
     mosquitto_destroy(mosq);
 
     mosquitto_lib_cleanup();
+
 
     displayMenu();
 
