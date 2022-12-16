@@ -1,9 +1,8 @@
+#include <mosquitto.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include <mosquitto.h>
 
 #define ROW 3
 #define COL 3
@@ -38,8 +37,7 @@ void delay(int number_of_seconds);
 // MQTT Broker
 void connect();
 
-int main()
-{
+int main() {
     connect();
 
     displayMenu();
@@ -47,7 +45,6 @@ int main()
     if (menuInput == 2)
         computer = true;
     else if (menuInput == 3) {
-
         while (!gameOver) {
             computerInput(1);
             isGameOver(1);
@@ -82,21 +79,20 @@ int main()
     return EXIT_SUCCESS;
 }
 
-void connect()
-{
+void connect() {
     int rc;
     struct mosquitto* mosq;
 
     mosquitto_lib_init();
 
-    mosq = mosquitto_new("player1", true, NULL);
+    mosq = mosquitto_new("LaptopClient", true, NULL);
 
     rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 60);
 
     if (rc != 0) {
         printf("Client could not connect to broker! Error Code: %d\n", rc);
         mosquitto_destroy(mosq);
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
     printf("We are now connected to the broker!\n");
 
@@ -108,8 +104,57 @@ void connect()
     mosquitto_lib_cleanup();
 }
 
-void gameRestart()
-{
+void on_connect(struct mosquitto* mosq, void* obj, int rc) {
+    printf("ID: %d\n", *(int*)obj);
+
+    if (rc) {
+        printf("Error with result code: %d\n", rc);
+        exit(EXIT_SUCCESS);
+    }
+
+    mosquitto_subscribe(mosq, NULL, "ESP32/input", 0);
+}
+
+void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
+    printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
+
+    switch (payload) {
+        case '1':
+            board[0][0] = 2;
+            break;
+        case '2':
+            board[0][1] = 2;
+            break;
+        case '3':
+            board[0][2] = 2;
+            break;
+        case '4':
+            board[1][0] = 2;
+            break;
+        case '5':
+            board[1][1] = 2;
+            break;
+        case '6':
+            board[1][2] = 2;
+            break;
+        case '7':
+            board[2][0] = 2;
+            break;
+        case '8':
+            board[2][1] = 2;
+            break;
+        case '9':
+            board[2][2] = 2;
+            break;
+        case '*':
+			reset();
+            break;
+        default:
+            break;
+    }
+}
+
+void gameRestart() {
     int input = 0;
     printf("\nPlay Again?\n1: Yes\n2: No\n");
     scanf("%d", &input);
@@ -122,8 +167,7 @@ void gameRestart()
         gameRestart();
 }
 
-void delay(int number_of_seconds)
-{
+void delay(int number_of_seconds) {
     int milli_seconds = 1000 * number_of_seconds;
 
     clock_t start_time = clock();
@@ -131,16 +175,14 @@ void delay(int number_of_seconds)
         ;
 }
 
-void drawCheck()
-{
+void drawCheck() {
     if (maxTurns >= 9) {
         printf("Draw!\n");
         gameOver = true;
     }
 }
 
-void displayMenu()
-{
+void displayMenu() {
     printf("\n======================\n");
     printf("WELCOME TO TIC TAC TOE!\n");
     printf("1 --- person vs. person\n");
@@ -158,9 +200,7 @@ void displayMenu()
     }
 }
 
-bool isGameOver(int player)
-{
-
+bool isGameOver(int player) {
     // check vertical
     for (int i = 0; i < COL; i++) {
         if (board[0][i] == player && board[1][i] == player && board[2][i] == player) {
@@ -197,8 +237,7 @@ bool isGameOver(int player)
     return gameOver;
 }
 
-void getPlayerTurn(int pT)
-{
+void getPlayerTurn(int pT) {
     printBoard();
 
     int row = 0;
@@ -215,8 +254,7 @@ void getPlayerTurn(int pT)
         getPlayerTurn(pT);
 }
 
-void printBoard()
-{
+void printBoard() {
     for (int i = 0; i < 3; i++) {
         printf("+-----------+\n");
         for (int j = 0; j < 3; j++) {
@@ -234,8 +272,7 @@ void printBoard()
     printf("+-----------+\n");
 }
 
-void reset()
-{
+void reset() {
     for (int i = 0; i < ROW; i++) {
         for (int j = 0; j < COL; j++) {
             board[i][j] = 0;
@@ -243,8 +280,7 @@ void reset()
     }
 }
 
-void computerInput(int player)
-{
+void computerInput(int player) {
     printBoard();
     bool isValid = false;
 
@@ -261,8 +297,7 @@ void computerInput(int player)
     maxTurns++;
 }
 
-int isValid(int x, int y)
-{
+int isValid(int x, int y) {
     if ((x < 4 && x > 0) && (y < 4 && y > 0)) {
         int tempX = x - 1;
         int tempY = y - 1;
