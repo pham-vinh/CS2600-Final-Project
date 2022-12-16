@@ -19,7 +19,16 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto messag
 }
 
 int main() {
+    int rc. id = 12;
 
+    mosquitto_lib_init();
+
+    struct mosquitto *mosq;
+
+    mosq = mosquitto_new("subscribe-test", true, &id);
+
+    mosquitto_connect_callback_set(mosq, on_connect);
+    mosquitto_message_callback_set(mosq, on_connect);
 
 
     return EXIT_SUCCESS;
