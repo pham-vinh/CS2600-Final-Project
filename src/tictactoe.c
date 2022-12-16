@@ -92,7 +92,7 @@ void connect() {
     if (rc != 0) {
         printf("Client could not connect to broker! Error Code: %d\n", rc);
         mosquitto_destroy(mosq);
-        return EXIT_SUCCESS;
+		exit(EXIT_SUCCESS);
     }
     printf("We are now connected to the broker!\n");
 
@@ -117,6 +117,8 @@ void on_connect(struct mosquitto* mosq, void* obj, int rc) {
 
 void on_message(struct mosquitto* mosq, void* obj, const struct mosquitto_message* msg) {
     printf("New message with topic %s: %s\n", msg->topic, (char*)msg->payload);
+
+	char payload = *((char*) msg->payload);
 
     switch (payload) {
         case '1':
