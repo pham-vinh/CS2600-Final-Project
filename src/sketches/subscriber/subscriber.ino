@@ -44,6 +44,7 @@ void setup() {
 
   // Set the broker host and port for the PubSubClient
   client.setServer(broker_host, broker_port);
+  client.setCallback(callback);
 
   // Set up pins to the led matrix
   pinMode(latchPin, OUTPUT);
@@ -56,7 +57,7 @@ void loop() {
   if (client.connect("ESP32Client")) {
     // Subscribe to a topic
     client.subscribe("ESP32/input");
-    
+
     int cols = 0x01;                                     // Assign binary 00000001. Means the first column is selected.
     for (int j = 0; j < 8; j++) {                        // display image of each frame
       matrixRowsVal(pgm_read_word_near(tictactoe + j));  // display the data in this column
@@ -73,6 +74,16 @@ void loop() {
   delay(5000);
 }
 
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived in topic: ");
+  Serial.println(topic);
+  Serial.print("Message:");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+  Serial.println("-----------------------");
+}
 
 void matrixRowsVal(int value) {
   // make latchPin output low level
