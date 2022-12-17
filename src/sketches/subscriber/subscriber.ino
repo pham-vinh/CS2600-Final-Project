@@ -74,16 +74,13 @@ void loop() {
     client.publish("ESP32/input", msg);
   }
 
-  // Connect to the Mosquitto MQTT broker
-  // // Subscribe to a topic
-  // client.subscribe("state/move");
-
-  // int cols = 0x01;                                     // Assign binary 00000001. Means the first column is selected.
-  // for (int j = 0; j < 8; j++) {                        // display image of each frame
-  //   matrixRowsVal(pgm_read_word_near(tictactoe + j));  // display the data in this column
-  //   matrixColsVal(~cols);                              // select this column
-  //   cols <<= 1;                                        // shift"cols" 1 bit left to select the next column
-  // }
+  //Connect to the Mosquitto MQTT broker
+  // Subscribe to a topic
+  client.subscribe("state/move");
+  if (client.available()) {
+      String gameState = client.readStringUntil('\n');
+      displayGameState(gameState);
+    }
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
