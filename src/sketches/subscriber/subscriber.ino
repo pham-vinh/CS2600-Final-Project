@@ -41,7 +41,7 @@ const char* ssid = "viPhone";
 const char* password = "12345678";
 
 // Mosquitto MQTT broker information
-const char* broker_host = "localhost";
+const char* broker_host = "test.mosquitto.org";
 const int broker_port = 1883;
 
 
@@ -76,7 +76,7 @@ void loop() {
 
   // Connect to the Mosquitto MQTT broker
   // // Subscribe to a topic
-  // client.subscribe("ESP32/input");
+  // client.subscribe("state/move");
 
   // int cols = 0x01;                                     // Assign binary 00000001. Means the first column is selected.
   // for (int j = 0; j < 8; j++) {                        // display image of each frame
