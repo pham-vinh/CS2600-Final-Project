@@ -41,7 +41,7 @@ const char* ssid = "viPhone";
 const char* password = "12345678";
 
 // Mosquitto MQTT broker information
-const char* broker_host = "test.mosquitto.org";
+const char* broker_host = "localhost";
 const int broker_port = 1883;
 
 
