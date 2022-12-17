@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 #define ROW 3
 #define COL 3
@@ -12,12 +11,8 @@ int menuInput;
 
 // Long String Matrix
 int board[ROW][COL];
-char move[3];
 bool gameOver = false;
 bool computer = false;
-bool received = false;
-bool waiting = false;
-int result;
 
 // Max Turns == 9
 int maxTurns = 0;
@@ -61,7 +56,6 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_messag
     switch (keypad_data) {
         case '1':
             board[0][0] = 2;
-			printf("Board[0][0] is now set to 2");
             break;
         case '2':
             board[0][1] = 2;
@@ -91,7 +85,6 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_messag
             reset();
             break;
         case 'B':
-			result = mosquitto_publish(mosq, NULL, "state/move", 2, "Q", 0, false);
             gameOver = true;
             break;
         default:
@@ -153,51 +146,21 @@ int main() {
             isGameOver(2);
             drawCheck();
         } else if (!gameOver) {
-            printf("Player 2: make your move\n");
+			if (mosq) {
+				printf("Player 2: make your move\n");
 
-			while (playerTwo && !pending) {
-				pending = moveInput();
+				isGameOver(2);
+				drawCheck();
+				mosquitto_loop(mosq, -1, 1);
 			}
-
-			pending = false;
-            isGameOver(2);
-            drawCheck();
         }
 		
-		received = false;
-		mosquitto_loop(mosq, -1, 1);
 		
     }
     mosquitto_lib_cleanup();
 	
 
     return EXIT_SUCCESS;
-}
-
-bool moveInput()
-{
-
-    int temp;
-
-    waiting = true;
-
-    printf("Player2: make your move:\n");
-    if (received)
-    {
-        fflush(stdin);
-
-        // move[1] = move[1] & 0x0f;
-        // move[1]--;
-        // move[1] = move[1] | 0x30;
-
-        // move[0] = 'O';
-
-        result = mosquitto_publish(mosq, NULL, "state/move", 2, move, 0, false);
-
-        return (result == MOSQ_ERR_SUCCESS);
-    }
-
-    return false;
 }
 
 
