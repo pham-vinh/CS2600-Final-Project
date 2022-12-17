@@ -13,7 +13,7 @@ int menuInput;
 int board[ROW][COL];
 bool gameOver = false;
 bool computer = false;
-
+bool received = false;
 // Max Turns == 9
 int maxTurns = 0;
 
@@ -26,13 +26,15 @@ void getPlayerTurn(int pT);
 void computerInput(int player);
 
 // Game State
-void drawCheck();
+bool drawCheck();
 int isValid(int x, int y);
 bool isGameOver(int player);
 
 // Helper Methods
 void reset();
 void delay(int number_of_seconds);
+
+struct mosquitto *mosq;
 
 void on_connect(struct mosquitto *mosq, void *obj, int rc) {
     printf("ID: %d\n", *(int *)obj);
@@ -48,8 +50,7 @@ void on_connect(struct mosquitto *mosq, void *obj, int rc) {
 }
 
 void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
-    char *payload = (char *)msg->payload;
-    int keypad_data = atoi(payload);
+    char payload = *(char *)msg->payload;
 
     switch (keypad_data) {
         case '1':
@@ -79,29 +80,49 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_messag
         case '9':
             board[2][2] = 2;
             break;
-        case '*':
+        case 'A':
             reset();
+            break;
+        case 'B':
+            gameOver = true;
             break;
         default:
             break;
     }
+
+    received = true;
+}
+
+bool connect() {
+    mosq = mosquitto_new(NULL, true, NULL);
+
+    int rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 30);
+
+    if (rc != MOSQ_ERR_SUCCESS) {
+        printf("Error connecting");
+        return false;
+    }
+
+    rc = mosquitto_subscribe(mosq, NULL, "ESP32/input", 0);
+
+    if (rc != MOSQ_ERR_SUCCESS) {
+        printf("Could not connect to broker with return code %d\n", rc);
+        return false;
+    }
+
+    return true;
 }
 
 int main() {
     int rc;
 
     mosquitto_lib_init();
-
-    struct mosquitto *mosq = mosquitto_new("subscribe-test", true, NULL);
+    bool connected = connect();
 
     mosquitto_connect_callback_set(mosq, on_connect);
 
-    rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 10);
-
-    if (rc) {
-        printf("Could not connect to Broker with return code %d\n", rc);
-        return -1;
-    }
+    if (!connected)
+        return EXIT_FAILURE;
 
     displayMenu();
 
@@ -143,9 +164,36 @@ int main() {
         }
     }
 
+    printBoard();
+    printf("Waiting for Player 1 to start the game\n");
+
+    gameOver = false;
+    bool playerTwo = false;
+    bool pending = false;
+
+    while (drawCheck()) {
+        if (playerTwo && !pending) {
+            pending = move();
+        }
+
+        getPlayerTurn(1);
+
+    }
+
     mosquitto_lib_cleanup();
 
     return EXIT_SUCCESS;
+}
+
+bool move() {
+    int result;
+    int temp;
+
+    waiting = true;
+
+    printBoard();
+    printf("Player 2: make your move\n");
+
 }
 
 void gameRestart() {
@@ -169,11 +217,13 @@ void delay(int number_of_seconds) {
         ;
 }
 
-void drawCheck() {
-    if (maxTurns >= 9) {
+bool drawCheck() {
+    if (maxTurns > 9 && !gameOver) {
         printf("Draw!\n");
         gameOver = true;
+        return true;
     }
+    return false;
 }
 
 void displayMenu() {
