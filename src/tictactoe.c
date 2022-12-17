@@ -153,7 +153,6 @@ int main() {
  			while (!received) {
                 delay(1);
             }
-
             received = false;
             playerTwo = true;
             isGameOver(2);
