@@ -1,0 +1,9 @@
+[Unit]
+Description=Script Service Automates AI Moves on startup
+
+[Service]
+Type=simple
+ExecStart=/home/vinh/Documents/GIT/CS2600-Final-Project/bot.sh
+Restart=always
+User=vinh
+Group=vinh
