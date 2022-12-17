@@ -19,4 +19,5 @@ spot=$((RANDOM % 9 + 1))
 	echo "Player 2: moves $row, $col"
 sleep 1
 done
-#mosquitto_publish -h $HOST -t $TOPIC -m "$row $col"
+
+mosquitto_publish -h $HOST -t $TOPIC -m "$row $col"
