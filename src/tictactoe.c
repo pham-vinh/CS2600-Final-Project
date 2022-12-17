@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define ROW 3
 #define COL 3
@@ -11,15 +12,20 @@ int menuInput;
 
 // Long String Matrix
 int board[ROW][COL];
+char move[3];
 bool gameOver = false;
 bool computer = false;
 bool received = false;
+bool waiting = false;
+int result;
+
 // Max Turns == 9
 int maxTurns = 0;
 
 // Declare Methods
 void displayMenu();
 void printBoard();
+bool moveInput();
 
 // Input
 void getPlayerTurn(int pT);
@@ -50,11 +56,12 @@ void on_connect(struct mosquitto *mosq, void *obj, int rc) {
 }
 
 void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg) {
-    char payload = *(char *)msg->payload;
+    char keypad_data = *(char *)msg->payload;
 
     switch (keypad_data) {
         case '1':
             board[0][0] = 2;
+			printf("Board[0][0] is now set to 2");
             break;
         case '2':
             board[0][1] = 2;
@@ -84,6 +91,7 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_messag
             reset();
             break;
         case 'B':
+			result = mosquitto_publish(mosq, NULL, "state/move", 2, "Q", 0, false);
             gameOver = true;
             break;
         default:
@@ -93,36 +101,23 @@ void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_messag
     received = true;
 }
 
-bool connect() {
-    mosq = mosquitto_new(NULL, true, NULL);
-
-    int rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 30);
-
-    if (rc != MOSQ_ERR_SUCCESS) {
-        printf("Error connecting");
-        return false;
-    }
-
-    rc = mosquitto_subscribe(mosq, NULL, "ESP32/input", 0);
-
-    if (rc != MOSQ_ERR_SUCCESS) {
-        printf("Could not connect to broker with return code %d\n", rc);
-        return false;
-    }
-
-    return true;
-}
 
 int main() {
-    int rc;
+    int rc, id = 12;
 
     mosquitto_lib_init();
-    bool connected = connect();
+    mosq = mosquitto_new(NULL, true, NULL);
 
     mosquitto_connect_callback_set(mosq, on_connect);
+	mosquitto_message_callback_set(mosq, on_message);
 
-    if (!connected)
+	rc = mosquitto_connect(mosq, "localhost", 1883, 30);
+
+	    if (rc) {
+        printf("Could not connect to broker with return code %d\n", rc);
         return EXIT_FAILURE;
+    }
+
 
     displayMenu();
 
@@ -143,8 +138,13 @@ int main() {
             }
         }
     }
+    printf("Waiting for Player 1 to start the game\n");
+
+    gameOver = false;
+    bool pending = false;
 
     while (!gameOver) {
+    bool playerTwo = false;
         getPlayerTurn(1);
         isGameOver(1);
         drawCheck();
@@ -154,47 +154,52 @@ int main() {
             drawCheck();
         } else if (!gameOver) {
             printf("Player 2: make your move\n");
-            bool waiting = true;
 
-            while (mosq) {
-                mosquitto_loop(mosq, -1, 1);
-            }
+			while (playerTwo && !pending) {
+				pending = moveInput();
+			}
+
+			pending = false;
             isGameOver(2);
             drawCheck();
         }
+		
+		received = false;
+		mosquitto_loop(mosq, -1, 1);
+		
     }
-
-    printBoard();
-    printf("Waiting for Player 1 to start the game\n");
-
-    gameOver = false;
-    bool playerTwo = false;
-    bool pending = false;
-
-    while (drawCheck()) {
-        if (playerTwo && !pending) {
-            pending = move();
-        }
-
-        getPlayerTurn(1);
-
-    }
-
     mosquitto_lib_cleanup();
+	
 
     return EXIT_SUCCESS;
 }
 
-bool move() {
-    int result;
+bool moveInput()
+{
+
     int temp;
 
     waiting = true;
 
-    printBoard();
-    printf("Player 2: make your move\n");
+    printf("Player2: make your move:\n");
+    if (received)
+    {
+        fflush(stdin);
 
+        // move[1] = move[1] & 0x0f;
+        // move[1]--;
+        // move[1] = move[1] | 0x30;
+
+        // move[0] = 'O';
+
+        result = mosquitto_publish(mosq, NULL, "state/move", 2, move, 0, false);
+
+        return (result == MOSQ_ERR_SUCCESS);
+    }
+
+    return false;
 }
+
 
 void gameRestart() {
     int input = 0;
