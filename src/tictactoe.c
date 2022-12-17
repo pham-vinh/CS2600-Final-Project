@@ -13,6 +13,7 @@ int menuInput;
 int board[ROW][COL];
 bool gameOver = false;
 bool computer = false;
+bool received = false;
 
 // Max Turns == 9
 int maxTurns = 0;
@@ -104,7 +105,7 @@ int main() {
     mosquitto_connect_callback_set(mosq, on_connect);
 	mosquitto_message_callback_set(mosq, on_message);
 
-	rc = mosquitto_connect(mosq, "localhost", 1883, 30);
+	rc = mosquitto_connect(mosq, "test.mosquitto.org", 1883, 30);
 
 	    if (rc) {
         printf("Could not connect to broker with return code %d\n", rc);
@@ -146,13 +147,17 @@ int main() {
             isGameOver(2);
             drawCheck();
         } else if (!gameOver) {
-			if (mosq) {
+
 				printf("Player 2: make your move\n");
 
-				isGameOver(2);
-				drawCheck();
-				mosquitto_loop(mosq, -1, 1);
-			}
+ 			while (!received) {
+                delay(1);
+            }
+
+            received = false;
+            playerTwo = true;
+            isGameOver(2);
+            drawCheck();
         }
 		
 		
